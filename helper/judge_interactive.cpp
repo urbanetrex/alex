@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <set>
 using namespace std;
 int main(){
     int n, m, q;
@@ -17,8 +18,13 @@ int main(){
             x=rand()%n;
         } while (a[x]);
         a[x] = true;
+
     }
-    for(int i=0; i<950; i++){
+    for(int i=0; i<n; i++){
+        cout<<a[i];
+    }
+    cout<<endl;
+    for(int i=0; i<=q; i++){
         char c;
         cin>>c;
         if(c=='?'){
@@ -32,10 +38,18 @@ int main(){
                 cout<<1<<endl;
             }
         }else{
-            for(int j = 0; j<n; j++){
-                bool b;
+            set<int> s;
+            int prev=0;
+            while(s.size()<m){
+                int b;
                 cin>>b;
-                if(b!=a[j]){
+                b--;
+                if(!a[b]){
+                    cout<<-1<<endl;
+                    return 0;
+                }
+                s.insert(b);
+                if(s.size()==prev){
                     cout<<-1<<endl;
                     return 0;
                 }

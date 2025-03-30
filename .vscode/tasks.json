@@ -3,10 +3,10 @@
         {
             "type": "cppbuild",
             "label": "C/C++: clang build active file",
-            "command": "/usr/bin/clang",
+            "command": "/usr/bin/clang++",
             "args": [
+                "-std=c++17", // Ensure C++17 support
                 "-fcolor-diagnostics",
-                "-fansi-escape-codes",
                 "-g",
                 "${file}",
                 "-o",

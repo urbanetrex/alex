@@ -13,21 +13,3 @@ void combine_out(vector< vector <vector<int> > > charset) {
         
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//Preferences: Configure User Snippets

@@ -9,7 +9,7 @@
             "",
             "int main() {",
             "\tcin.tie(0)->sync_with_stdio(0);",
-            "\t${1:solution}",
+            "\t${1://solution}",
             "\treturn 0;",
             "}"
         ]
@@ -24,7 +24,7 @@
             "using namespace std;",
             "",
             "void solve() {",
-            "\t${1:solution}",
+            "\t${1://solution}",
             "}",
             "",
             "int main() {",

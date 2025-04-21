@@ -34,7 +34,7 @@ def ask_before_exit():
     exit_window.geometry("400x200")
     exit_window.configure(bg="black")
 
-    def on_closing(): 
+    def on_closing():
         global click
         click = False
         exit_window.destroy()
@@ -55,10 +55,10 @@ root.protocol("WM_DELETE_WINDOW", ask_before_exit)
 
 
 def gamestart(root):
-    
+
     def modeselect():
         root.title("Pixel Raiders -- Please select a mode")
-    
+
         for widget in root.winfo_children():
             widget.destroy()
 
@@ -66,7 +66,7 @@ def gamestart(root):
         background.place(relwidth=1, relheight=1)
         home = tk.Button(background, text="HOME", font=("Tiny5", 20), fg="blue", bg="black", command=lambda: main(root))
         home.place(relx=0, rely=0)
-        #make a mode selection screen 
+        #make a mode selection screen
         label = tk.Label(background, text="SELECT MODE", font=("Tiny5", 36), fg="white", bg="black")
         label.place(relx=0.5, rely=0.2, anchor="center")
         dash = tk.Button(background, text="DASH MODE", font=("Tiny5", 48), fg="green", bg="black", command=dash_mode)
@@ -81,10 +81,16 @@ def gamestart(root):
         background = tk.Frame(root, bg="black")
         background.place(relwidth=1, relheight=1)
         click2 = False
+        pause = None
+        pausevar = False
+        flame_x = 0.5
+        flame_speed = 1000
         def ask_before_mode():
             #confirmation before leaving game to mode selector
             global click
-            nonlocal click2
+            nonlocal click2, pausevar
+            pausevar = True
+            pause.config(text="RESUME", fg="green")
             if click or click2:
                 return
             click2 = True
@@ -92,7 +98,7 @@ def gamestart(root):
             exit_window.title("Confirm Exit")
             exit_window.geometry("400x200")
             exit_window.configure(bg="black")
-            def on_closing(): 
+            def on_closing():
                 global click
                 nonlocal click2
                 click = False
@@ -113,8 +119,58 @@ def gamestart(root):
         time.place(relx=0.2, rely=0, anchor="n")
         score = tk.Label(background, text="SCORE:", font=("Tiny5", 20), fg="white", bg="black")
         score.place(relx=0.5, rely=0, anchor="n")
-        pause = tk.Button(background, text="PAUSE", font=("Tiny5", 20), fg="red", bg="black", command=lambda: None) # a placeholder
+
+        sprite_container = tk.Frame(background, bg="black")
+        sprite_container.place(relx=0.5, rely=0.75, relwidth=0.078125, relheight=0.125, anchor="center")
+
+        # Create the main sprite
+        for i, row in enumerate(main_sprite):
+            for j, cell in enumerate(row):
+                color = parse_color(cell, 0)
+                sprite = tk.Frame(sprite_container, bg=color)
+                sprite.place(relx=j/5, rely=i/8, relwidth=0.625, relheight=0.625)
+
+        def pause_game():
+            nonlocal pausevar, pause
+
+            pausevar = not pausevar
+            if pausevar:
+                pause.config(text="RESUME", fg="green")
+            else:
+                pause.config(text="PAUSE", fg="red")
+                change_sprite()
+            # Pause the game logic here
+        pause = tk.Button(background, text="PAUSE", font=("Tiny5", 20), fg="red", bg="black", command=pause_game)
         pause.place(relx=0.8, rely=0, anchor="n")
+
+        # Create the looped sprite
+        loop_num = 1
+        def change_sprite():
+            nonlocal loop_num, sprite_container
+            # Clear the previous sprite
+            sprite_container.destroy()
+            #wait a second before changing the sprite
+            sprite_container = tk.Frame(background, bg="black")
+            sprite_container.place(relx=0.5, rely=0.75, relwidth=0.078125, relheight=0.125, anchor="center")
+            # Create the main sprite
+            for i, row in enumerate(main_sprite):
+                for j, cell in enumerate(row):
+                    color = parse_color(cell, loop_num)
+                    sprite = tk.Frame(sprite_container, bg=color)
+                    sprite.place(relx=j/5, rely=i/8, relwidth=0.625, relheight=0.625)
+
+
+            loop_num = (loop_num + 1) % 4  # Loop through 0 to 3
+
+            if not pausevar:
+                # Schedule the next sprite change
+                nonlocal flame_speed
+                sprite_container.after(flame_speed, change_sprite)  # Change sprite every second
+                if flame_speed > 250:
+                    flame_speed -= 1
+        change_sprite()
+
+
 
     def quest_mode():
         root.title("Pixel Raiders -- Play Quest Mode")
@@ -134,7 +190,7 @@ def gamestart(root):
             exit_window.title("Confirm Exit")
             exit_window.geometry("400x200")
             exit_window.configure(bg="black")
-            def on_closing(): 
+            def on_closing():
                 global click
                 nonlocal click2
                 click = False
@@ -154,11 +210,11 @@ def gamestart(root):
         time = tk.Label(background, text="TIME:", font=("Tiny5", 20), fg="white", bg="black")
         time.place(relx=0.2, rely=0, anchor="n")
 
-        
+
 
         pause = tk.Button(background, text="PAUSE", font=("Tiny5", 20), fg="red", bg="black", command=lambda: None) # a placeholder
         pause.place(relx=0.8, rely=0, anchor="n")
-        
+
 
 
 
@@ -166,7 +222,7 @@ def gamestart(root):
 
 def main(root):
     root.title("Pixel Raiders -- Main Menu")
-    
+
     for widget in root.winfo_children():
         widget.destroy()
 

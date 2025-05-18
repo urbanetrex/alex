@@ -1,5 +1,5 @@
 {
-    "Code template": {
+    "Code template for C++": {
         "scope": "cpp",
         "prefix": "tmpbasic",
         "body": [
@@ -15,7 +15,7 @@
         ]
     },
 
-    "Codeforces code template": {
+    "Codeforces code template for C++": {
         "scope": "cpp",
         "prefix": "tmpbasiccf",
         "body": [
@@ -35,6 +35,21 @@
             "\twhile(t--)solve();",
             "\treturn 0;",
             "}"
+        ]
+    },
+
+    "Codeforces code template for Python": {
+        "scope": "python",
+        "prefix": "tmpbasiccf",
+        "body": [
+            "def solve():",
+            "\t${1:pass #solution}",
+            "",
+            "if __name__ == '__main__':",
+            "\tt = int(input())",
+            "\twhile t > 0:",
+            "\t\tsolve()",
+            "\t\tt -= 1"
         ]
     }
 }

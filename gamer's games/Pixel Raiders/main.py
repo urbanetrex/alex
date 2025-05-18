@@ -85,6 +85,11 @@ def gamestart(root):
         pausevar = False
         flame_x = 0.5
         flame_speed = 1000
+        def cv():
+            nonlocal flame_speed
+            i = str(1/flame_speed*10)
+            return i
+
         def ask_before_mode():
             #confirmation before leaving game to mode selector
             global click
@@ -114,11 +119,11 @@ def gamestart(root):
             no_button = tk.Button(exit_window, text="No", font=("Tiny5", 14), fg="green", bg="black", command=on_closing)
             no_button.pack(side="right", padx=20)
         home = tk.Button(background, text="MENU", font=("Tiny5", 20), fg="red", bg="black", command=ask_before_mode)
-        home.place(relx=0, rely=0)
+        home.place(relx=0, rely=0, relwidth=0.2, relheight=0.111111111111)
         time = tk.Label(background, text="TIME:", font=("Tiny5", 20), fg="white", bg="black")
-        time.place(relx=0.2, rely=0, anchor="n")
+        time.place(relx=0.2, rely=0, relwidth=0.333333333333, relheight=0.111111111111)
         score = tk.Label(background, text="SCORE:", font=("Tiny5", 20), fg="white", bg="black")
-        score.place(relx=0.5, rely=0, anchor="n")
+        score.place(relx=0.5, rely=0, relwidth=0.333333333333, relheight=0.111111111111)
 
         sprite_container = tk.Frame(background, bg="black")
         sprite_container.place(relx=0.5, rely=0.75, relwidth=0.078125, relheight=0.125, anchor="center")
@@ -141,17 +146,17 @@ def gamestart(root):
                 change_sprite()
             # Pause the game logic here
         pause = tk.Button(background, text="PAUSE", font=("Tiny5", 20), fg="red", bg="black", command=pause_game)
-        pause.place(relx=0.8, rely=0, anchor="n")
+        pause.place(relx=0.8, rely=0, relwidth=0.2, relheight=0.111111111111)
 
         # Create the looped sprite
         loop_num = 1
         def change_sprite():
-            nonlocal loop_num, sprite_container
+            nonlocal loop_num, sprite_container, flame_x, flame_speed, pausevar
             # Clear the previous sprite
             sprite_container.destroy()
             #wait a second before changing the sprite
             sprite_container = tk.Frame(background, bg="black")
-            sprite_container.place(relx=0.5, rely=0.75, relwidth=0.078125, relheight=0.125, anchor="center")
+            sprite_container.place(relx=flame_x, rely=0.75, relwidth=0.078125, relheight=0.125, anchor="center")
             # Create the main sprite
             for i, row in enumerate(main_sprite):
                 for j, cell in enumerate(row):
@@ -168,9 +173,45 @@ def gamestart(root):
                 sprite_container.after(flame_speed, change_sprite)  # Change sprite every second
                 if flame_speed > 250:
                     flame_speed -= 1
-        change_sprite()
+        sprite_container.after(1001, change_sprite)  # Start the sprite change loop
 
+        def left(event):
+            nonlocal flame_x, pausevar
+            if pausevar: return
+            flame_x -= 0.015625
+            if flame_x < 0.0390625:
+                flame_x = 0.0390625
+            # Update the position of the sprite after moving
+            sprite_container.place(relx=flame_x, rely=0.75, relwidth=0.078125, relheight=0.125, anchor="center")
 
+        def right(event):
+            nonlocal flame_x, pausevar
+            if pausevar: return
+            flame_x += 0.015625
+            if flame_x > 0.9609375:
+                flame_x = 0.9609375
+            # Update the position of the sprite after moving
+            sprite_container.place(relx=flame_x, rely=0.75, relwidth=0.078125, relheight=0.125, anchor="center")
+
+        def slow(event):
+            nonlocal flame_speed
+            if flame_speed < 1000:
+                flame_speed += 10
+
+        def speed_up(event):
+            nonlocal flame_speed
+            if flame_speed > 250:
+                flame_speed -= 10
+
+        # Ensure the widget can receive keyboard events
+        root.focus_set()
+
+        # Bind the Left and Right keys
+        root.bind("<Left>", left)
+        root.bind("<Right>", right)
+        root.bind("<Up>", speed_up)
+        root.bind("<Down>", slow)
+        root.bind("<space>", speed_up)  # Placeholder for space key
 
     def quest_mode():
         root.title("Pixel Raiders -- Play Quest Mode")

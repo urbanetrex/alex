@@ -1,6 +1,8 @@
 import tkinter as tk
+import random
 
 # Set up the main window
+# Window pixels: 64x64
 root = tk.Tk()
 root.title("Pixel Raiders -- Loading...")
 root.geometry("600x400")
@@ -8,9 +10,9 @@ root.configure(bg="black")
 
 main_sprite = [
     ["black", "black", "yellow", "black", "black"],
-    ["black", "#FFB840", "#FFA500", "#FFB840", "black"],
+    ["black", "#FFB840", "orange", "#FFB840", "black"],
     ["yellow", "orange", "red", "orange", "yellow"],
-    ["black", "#FFB840", "#FFA500", "#FFB840", "black"],
+    ["black", "#FFB840", "orange", "#FFB840", "black"],
     ["black", "0 1", "yellow", "0 1", "black"],
     ["black", "1 2", "black", "1 2", "black"],
     ["black", "2 3", "black", "2 3", "black"],
@@ -81,21 +83,10 @@ def gamestart(root):
         background = tk.Frame(root, bg="black")
         background.place(relwidth=1, relheight=1)
         click2 = False
-        pause = None
-        pausevar = False
-        flame_x = 0.5
-        flame_speed = 1000
-        def cv():
-            nonlocal flame_speed
-            i = str(1/flame_speed*10)
-            return i
-
         def ask_before_mode():
             #confirmation before leaving game to mode selector
             global click
-            nonlocal click2, pausevar
-            pausevar = True
-            pause.config(text="RESUME", fg="green")
+            nonlocal click2
             if click or click2:
                 return
             click2 = True
@@ -119,99 +110,96 @@ def gamestart(root):
             no_button = tk.Button(exit_window, text="No", font=("Tiny5", 14), fg="green", bg="black", command=on_closing)
             no_button.pack(side="right", padx=20)
         home = tk.Button(background, text="MENU", font=("Tiny5", 20), fg="red", bg="black", command=ask_before_mode)
-        home.place(relx=0, rely=0, relwidth=0.2, relheight=0.111111111111)
+        home.place(relx=0, rely=0)
         time = tk.Label(background, text="TIME:", font=("Tiny5", 20), fg="white", bg="black")
-        time.place(relx=0.2, rely=0, relwidth=0.333333333333, relheight=0.111111111111)
-        score = tk.Label(background, text="SCORE:", font=("Tiny5", 20), fg="white", bg="black")
-        score.place(relx=0.5, rely=0, relwidth=0.333333333333, relheight=0.111111111111)
-
-        sprite_container = tk.Frame(background, bg="black")
-        sprite_container.place(relx=0.5, rely=0.75, relwidth=0.078125, relheight=0.125, anchor="center")
-
-        # Create the main sprite
-        for i, row in enumerate(main_sprite):
-            for j, cell in enumerate(row):
-                color = parse_color(cell, 0)
-                sprite = tk.Frame(sprite_container, bg=color)
-                sprite.place(relx=j/5, rely=i/8, relwidth=0.625, relheight=0.625)
-
+        time.place(relx=0.2, rely=0, anchor="n")
+        pausevar = False
         def pause_game():
-            nonlocal pausevar, pause
-
-            pausevar = not pausevar
+            nonlocal pausevar
             if pausevar:
-                pause.config(text="RESUME", fg="green")
-            else:
-                pause.config(text="PAUSE", fg="red")
+                pausevar = False
+                pause.config(text="PAUSE")
                 change_sprite()
-            # Pause the game logic here
+            else:
+                pausevar = True
+                pause.config(text="RESUME")
         pause = tk.Button(background, text="PAUSE", font=("Tiny5", 20), fg="red", bg="black", command=pause_game)
-        pause.place(relx=0.8, rely=0, relwidth=0.2, relheight=0.111111111111)
+        pause.place(relx=0.8, rely=0, anchor="n")
+        # Initialize game variables
+        obstacles = [[0 for _ in range(64)] for _ in range(59)]
+        flame_x = 0.5
+        flame_speed = 1000  # Initial speed in milliseconds
+        countdown = 10  # Countdown for gap creation
+        starting_plc = 0  # Starting position for the gap
+        mode = 0  # Mode for gap movement, can be -1, 0, or 1
+        click = False  # Global click variable to prevent multiple clicks
+        # Initialize static obstacle and sprite containers
+        obstacle_refs = [[None for _ in range(64)] for _ in range(59)]
+        sprite_refs = [[None for _ in range(5)] for _ in range(8)]
 
-        # Create the looped sprite
+        # Create obstacle grid once
+        for i in range(59):
+            for j in range(64):
+                cell = tk.Frame(background, bg="black")
+                cell.place(relx=j/64, rely=(i+1)/60, relwidth=0.015625, relheight=0.0166666666667)
+                obstacle_refs[i][j] = cell
+
+        # Create the main sprite grid once
+        sprite_container = tk.Frame(background, bg="black")
+        sprite_container.place(relx=flame_x, rely=0.75, relwidth=0.078125, relheight=0.125, anchor="center")
+        for i in range(8):
+            for j in range(5):
+                cell = tk.Frame(sprite_container, bg="black")
+                cell.place(relx=j/5, rely=i/8, relwidth=0.625, relheight=0.625)
+                sprite_refs[i][j] = cell
+
         loop_num = 1
+
         def change_sprite():
-            nonlocal loop_num, sprite_container, flame_x, flame_speed, pausevar
-            # Clear the previous sprite
-            sprite_container.destroy()
-            #wait a second before changing the sprite
-            sprite_container = tk.Frame(background, bg="black")
-            sprite_container.place(relx=flame_x, rely=0.75, relwidth=0.078125, relheight=0.125, anchor="center")
-            # Create the main sprite
+            nonlocal loop_num, flame_x, flame_speed, pausevar, countdown, starting_plc
+
+            # Update sprite colors
             for i, row in enumerate(main_sprite):
                 for j, cell in enumerate(row):
                     color = parse_color(cell, loop_num)
-                    sprite = tk.Frame(sprite_container, bg=color)
-                    sprite.place(relx=j/5, rely=i/8, relwidth=0.625, relheight=0.625)
+                    sprite_refs[i][j].config(bg=color)
 
+            loop_num = (loop_num + 1) % 4
 
-            loop_num = (loop_num + 1) % 4  # Loop through 0 to 3
+            # Shift obstacles down
+            for i in range(58, 0, -1):
+                obstacles[i] = obstacles[i-1][:]
+
+            if countdown == 0:
+                gap_width = 9
+                obstacles[0] = [1] * 64
+                for i in range(starting_plc, starting_plc + gap_width):
+                    if 0 <= i < 64:
+                        obstacles[0][i] = 0
+
+                mode = random.randint(-10, 10)
+                starting_plc += mode
+                if starting_plc < 0:
+                    starting_plc = 0
+                elif starting_plc > 64 - gap_width:
+                    starting_plc = 64 - gap_width
+                starting_plc = max(0, min(starting_plc, 64 - gap_width))
+                countdown = 10
+            else:
+                countdown -= 1
+
+            # Update obstacle display
+            for i in range(59):
+                for j in range(64):
+                    color = "blue" if obstacles[i][j] == 1 else "black"
+                    obstacle_refs[i][j].config(bg=color)
 
             if not pausevar:
-                # Schedule the next sprite change
-                nonlocal flame_speed
-                sprite_container.after(flame_speed, change_sprite)  # Change sprite every second
-                if flame_speed > 250:
-                    flame_speed -= 1
-        sprite_container.after(1001, change_sprite)  # Start the sprite change loop
+                # Slowdown limiter
+                flame_speed = max(250, flame_speed - 1)
+                background.after(flame_speed, change_sprite)
 
-        def left(event):
-            nonlocal flame_x, pausevar
-            if pausevar: return
-            flame_x -= 0.015625
-            if flame_x < 0.0390625:
-                flame_x = 0.0390625
-            # Update the position of the sprite after moving
-            sprite_container.place(relx=flame_x, rely=0.75, relwidth=0.078125, relheight=0.125, anchor="center")
-
-        def right(event):
-            nonlocal flame_x, pausevar
-            if pausevar: return
-            flame_x += 0.015625
-            if flame_x > 0.9609375:
-                flame_x = 0.9609375
-            # Update the position of the sprite after moving
-            sprite_container.place(relx=flame_x, rely=0.75, relwidth=0.078125, relheight=0.125, anchor="center")
-
-        def slow(event):
-            nonlocal flame_speed
-            if flame_speed < 1000:
-                flame_speed += 10
-
-        def speed_up(event):
-            nonlocal flame_speed
-            if flame_speed > 250:
-                flame_speed -= 10
-
-        # Ensure the widget can receive keyboard events
-        root.focus_set()
-
-        # Bind the Left and Right keys
-        root.bind("<Left>", left)
-        root.bind("<Right>", right)
-        root.bind("<Up>", speed_up)
-        root.bind("<Down>", slow)
-        root.bind("<space>", speed_up)  # Placeholder for space key
+        background.after(1001, change_sprite)
 
     def quest_mode():
         root.title("Pixel Raiders -- Play Quest Mode")

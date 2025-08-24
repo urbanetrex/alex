@@ -3,7 +3,6 @@
 
 import os
 import random
-import time
 import copy
 
 '''
@@ -33,6 +32,8 @@ cells = [[0,0,0,0],
          [0,0,0,0]]
 previous = ' '
 
+_errors1 = ["Enter a command:", "Invalid command. Please enter W, A, S, D, Q, or I for more info: ", "No tiles moved! Try a different direction: "]
+
 def check_won():
     """Check if the player has won."""
     global cells
@@ -52,19 +53,26 @@ def check_blanks():
     return blanks
 
 def num_to_unit(num):
-    if num == 0:
-        return "[    ]"
-    elif num < 10:
-        return f"[  {num} ]"
-    elif num < 100:
-        return f"[ {num} ]"
-    elif num < 1000:
-        return f"[ {num}]"
-    elif num < 10000:
-        return f"[{num}]"
-    else:
-        return "[ ERR]"
-    
+    # ANSI background (bg) and foreground (fg) color codes
+    colors = {
+        0:     ('\033[48;5;250m', '\033[38;5;240m'),  # Light gray bg, dark text
+        2:     ('\033[48;5;245m', '\033[38;5;15m'),   # Gray bg, **white text**
+        4:     ('\033[48;5;131m', '\033[38;5;15m'),   # Maroon bg
+        8:     ('\033[48;5;196m', '\033[38;5;15m'),   # Red
+        16:    ('\033[48;5;202m', '\033[38;5;15m'),   # Orange
+        32:    ('\033[48;5;226m', '\033[38;5;0m'),    # Yellow (black text)
+        64:    ('\033[48;5;220m', '\033[38;5;0m'),    # Gold
+        128:   ('\033[48;5;154m', '\033[38;5;0m'),    # Lime
+        256:   ('\033[48;5;34m',  '\033[38;5;15m'),   # Green
+        512:   ('\033[48;5;51m',  '\033[38;5;0m'),    # Cyan
+        1024:  ('\033[48;5;33m',  '\033[38;5;15m'),   # Blue
+        2048:  ('\033[48;5;129m', '\033[38;5;15m'),   # Purple
+    }
+
+    bg, fg = colors.get(num, ('\033[48;5;235m', '\033[38;5;15m'))  # fallback
+    reset = '\033[0m'
+    return f"{bg}{fg}[{str(num).rjust(4)}]{reset}"
+
 def pop_random():
     """Pop a random number into a random blank cell, and return True if successful."""
     global cells
@@ -83,11 +91,9 @@ def display():
     for row in cells:
         print(" ".join(num_to_unit(num) for num in row))
     if previous != ' ':
-        print("ENTERED", previous)
+        print("Entered", previous)
     if check_won():
         print("YOU WON!")
-    else:
-        print("ENTER A COMMAND: ", end='')
 
 def reset_game():
     """Reset the game to the initial state."""
@@ -121,10 +127,11 @@ def compress_and_merge(line):
 def main():
     """Main game loop."""
     global previous, cells
+    error_code = 0
     pop_random()  # Start with a random number
     while True:
         display()
-        command = input().strip().upper()
+        command = input(_errors1[error_code]).strip().upper()
         if command == 'W':
             previous = 'W'
             before = copy.deepcopy(cells)
@@ -138,13 +145,14 @@ def main():
 
             if not boards_equal(before, cells):
                 pop_random()
+                error_code = 0
             else:
-                print("No tiles moved!")
+                error_code = 2
 
             # Always check game over, even if no tiles moved
             if check_game_over():
                 display()
-                print("GAME OVER! No more valid moves.")
+                print("Game over! No more valid moves.")
                 break
         elif command == 'S':
             previous = 'S'
@@ -158,13 +166,14 @@ def main():
 
             if not boards_equal(before, cells):
                 pop_random()
+                error_code = 0
             else:
-                print("No tiles moved!")
+                error_code = 2
 
             # Always check game over, even if no tiles moved
             if check_game_over():
                 display()
-                print("GAME OVER! No more valid moves.")
+                print("Game over! No more valid moves.")
                 break
         elif command == 'A':
             previous = 'A'
@@ -174,13 +183,14 @@ def main():
             
             if not boards_equal(before, cells):
                 pop_random()
+                error_code = 0
             else:
-                print("No tiles moved!")
+                error_code = 2
 
             # Always check game over, even if no tiles moved
             if check_game_over():
                 display()
-                print("GAME OVER! No more valid moves.")
+                print("Game over! No more valid moves.")
                 break
         elif command == 'D':
             previous = 'D'
@@ -192,13 +202,14 @@ def main():
 
             if not boards_equal(before, cells):
                 pop_random()
+                error_code = 0
             else:
-                print("No tiles moved!")
+                error_code = 2
 
             # Always check game over, even if no tiles moved
             if check_game_over():
                 display()
-                print("GAME OVER! No more valid moves.")
+                print("Game over! No more valid moves.")
                 break
         elif command == 'Q':
             print("Exiting the game.")
@@ -209,22 +220,38 @@ def main():
             print("Pressing I will show this info again.")
             print("Press Enter to continue...")
             input()
+            error_code = 0
             continue
-        #else:
-            #print("Invalid command. Please enter W, A, S, D, Q, or I for more info.")
-            #time.sleep(5)
+        else:
+            previous = command
+            error_code = 1
+            continue
         if check_won():
             display()
             break
 
 if __name__ == "__main__":
-    reset_game()
-    main()
-    print("Thanks for playing 2048 in the terminal!")
-    print("Press Enter to exit...")
-    input()
-    clear_screen()
-    print("Goodbye!")
-    time.sleep(3)
-    clear_screen()
-    exit(0)
+    print()
+    print("Welcome to 2048 in the terminal!")
+    print("Use W (up), S (down), A (left), D (right) to move tiles.")
+    print("Try to reach 2048!")
+    print("Press Q to quit, I for instructions.")
+    input("Press Enter to start...")
+    while True:
+        reset_game()
+        main()
+        print("Play again? (Y/N): ", end='')
+        quit_choice = True
+        while True:
+            choice = input().strip().upper()
+            if choice == 'N':
+                print("Thanks for playing!")
+                print()
+                break
+            elif choice == 'Y':
+                quit_choice = False
+                break
+            else:
+                print("Please enter Y or N: ", end='')
+        if quit_choice:
+            break

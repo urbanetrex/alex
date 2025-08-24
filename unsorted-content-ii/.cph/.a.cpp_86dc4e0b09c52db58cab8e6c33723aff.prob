@@ -1,0 +1,1 @@
+{"name":"Local: a","url":"/Users/T-rex/Documents/Documents/alex/unsorted-content-ii/a.cpp","tests":[{"id":1755686772362,"input":"5\n3 5 2 1 4\n4 3 2 5 1\n","output":"2\n"}],"interactive":false,"memoryLimit":1024,"timeLimit":3000,"srcPath":"/Users/T-rex/Documents/Documents/alex/unsorted-content-ii/a.cpp","group":"local","local":true}
